@@ -13,32 +13,6 @@ Height :: 480
 SceneWidth :: 200
 SceneHeight :: 200
 
-CellKind :: enum {
-	Air,
-	Sand,
-	Water,
-}
-
-cell_colors := [CellKind]raylib.Color {
-	.Air   = raylib.BLACK,
-	.Sand  = raylib.BEIGE,
-	.Water = raylib.BLUE,
-}
-
-Cell :: struct {
-	kind:      CellKind,
-	rectangle: raylib.Rectangle,
-}
-
-cells: [SceneWidth * SceneHeight]Cell
-
-GetCell :: proc(x: int, y: int) -> ^Cell {
-	if x < 0 || x >= SceneWidth || y < 0 || y >= SceneHeight {
-		return nil
-	}
-	return &cells[x + y * SceneWidth]
-}
-
 main :: proc() {
 	raylib.InitWindow(Width, Height, "Cell Simulation")
 	defer raylib.CloseWindow()
@@ -104,37 +78,7 @@ main :: proc() {
 				x := cell_index % SceneWidth
 				y := cell_index / SceneWidth
 				current_cell := &cells[cell_index]
-				switch current_cell.kind {
-				case .Air:
-				case .Sand:
-					if below_cell := GetCell(x, y + 1); below_cell != nil && below_cell.kind == .Air {
-						current_cell.kind = .Air
-						below_cell.kind = .Sand
-					} else {
-						if rand.uint32() % 2 == 0 {
-							if right_cell := GetCell(x + 1, y); right_cell != nil && right_cell.kind == .Air {
-								if below_right_cell := GetCell(
-									   x + 1,
-									   y + 1,
-								   ); below_right_cell != nil && below_right_cell.kind == .Air {
-									current_cell.kind = .Air
-									below_right_cell.kind = .Sand
-								}
-							}
-						} else {
-							if left_cell := GetCell(x - 1, y); left_cell != nil && left_cell.kind == .Air {
-								if below_left_cell := GetCell(
-									   x - 1,
-									   y + 1,
-								   ); below_left_cell != nil && below_left_cell.kind == .Air {
-									current_cell.kind = .Air
-									below_left_cell.kind = .Sand
-								}
-							}
-						}
-					}
-				case .Water:
-				}
+                UpdateCell(current_cell, x, y)
 			}
 			update_time -= UpdateRate
 		}
