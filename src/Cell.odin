@@ -8,12 +8,14 @@ CellKind :: enum {
 	Air,
 	Sand,
 	Water,
+	Crystal,
 }
 
 cell_colors := [CellKind]raylib.Color {
-	.Air   = raylib.BLACK,
-	.Sand  = raylib.BEIGE,
-	.Water = raylib.BLUE,
+	.Air     = raylib.BLACK,
+	.Sand    = raylib.BEIGE,
+	.Water   = raylib.BLUE,
+	.Crystal = raylib.VIOLET,
 }
 
 Cell :: struct {
@@ -80,12 +82,63 @@ UpdateCell :: proc(current_cell: ^Cell, x, y: int) {
 		} else {
 			if rand.uint32() % 2 == 0 {
 				if right_cell := GetCell(x + 1, y); right_cell != nil && right_cell.kind == .Air {
-					SwapCell(current_cell, right_cell)
+					if below_right_cell := GetCell(
+						   x + 1,
+						   y + 1,
+					   ); below_right_cell != nil && below_right_cell.kind == .Air {
+						SwapCell(current_cell, below_right_cell)
+					} else {
+						SwapCell(current_cell, right_cell)
+					}
 				}
 			} else {
 				if left_cell := GetCell(x - 1, y); left_cell != nil && left_cell.kind == .Air {
-					SwapCell(current_cell, left_cell)
+					if below_left_cell := GetCell(
+						   x - 1,
+						   y + 1,
+					   ); below_left_cell != nil && below_left_cell.kind == .Air {
+						SwapCell(current_cell, below_left_cell)
+					} else {
+						SwapCell(current_cell, left_cell)
+					}
 				}
+			}
+		}
+	case .Crystal:
+		if below_cell := GetCell(
+			   x,
+			   y + 1,
+		   ); below_cell != nil && (below_cell.kind == .Air || below_cell.kind == .Sand || below_cell.kind ==
+		   .Water) {
+			supported := false
+			if right_cell := GetCell(x + 1, y); right_cell != nil && right_cell.kind == .Crystal {
+				if right_below_cell := GetCell(
+					   x + 1,
+					   y + 1,
+				   ); right_below_cell != nil && right_below_cell.kind == .Crystal {
+					if right_below_below_cell := GetCell(
+						   x + 1,
+						   y + 2,
+					   ); right_below_below_cell != nil && right_below_below_cell.kind == .Crystal {
+						supported = true
+					}
+				}
+			}
+			if left_cell := GetCell(x - 1, y); left_cell != nil && left_cell.kind == .Crystal {
+				if left_below_cell := GetCell(
+					   x - 1,
+					   y + 1,
+				   ); left_below_cell != nil && left_below_cell.kind == .Crystal {
+					if left_below_below_cell := GetCell(
+						   x - 1,
+						   y + 2,
+					   ); left_below_below_cell != nil && left_below_below_cell.kind == .Crystal {
+						supported = true
+					}
+				}
+			}
+			if !supported {
+				SwapCell(current_cell, below_cell)
 			}
 		}
 	}
